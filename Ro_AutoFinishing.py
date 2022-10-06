@@ -215,7 +215,6 @@ class Ro_AutoFinishing:
                 chat_red_position = (int)(w * (1.17 / 4))
 
                 screen_shot_chat_room = screen_shot.crop((0, 0, (w * 1/3), h))
-                screen_shot_chat_room.save("1234.png")
                 screen_shot_chat_room = np.array(screen_shot_chat_room)
                 h_room, w_room, _ = screen_shot_chat_room.shape
 

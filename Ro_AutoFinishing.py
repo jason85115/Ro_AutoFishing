@@ -21,6 +21,7 @@ class Ro_AutoFinishing:
 
         self.fishing = False
         self.get_red_envelopeing = False
+        self.chat_get_red_envelopeing = False
         self.tasking = True
 
         self.Ro_AutoFinishing_GUI = tk.Tk()
@@ -65,7 +66,7 @@ class Ro_AutoFinishing:
         self.y.grid(row=3, column=2, padx=0, pady=5, columnspan=2, sticky="we")
 
         # fifth row
-        tk.Label(self.Ro_AutoFinishing_GUI, text="hint: 點選 f 將會抓取滑鼠位置 (紅包或水上)", foreground="red").grid(row=4, column=0, columnspan=4, pady=[0,5])
+        tk.Label(self.Ro_AutoFinishing_GUI, text="hint: 點選 f 將會抓取滑鼠位置 (水上)", foreground="red").grid(row=4, column=0, columnspan=4, pady=[0,5])
 
         # sixth row
         self.stop_button = ttk.Button(self.Ro_AutoFinishing_GUI, text="stop")
@@ -76,7 +77,7 @@ class Ro_AutoFinishing:
         self.prevent_save_power_checkbox.grid(row=5, column= 3)
         
         # seven row
-        tk.Label(self.Ro_AutoFinishing_GUI, text="hint: s釣魚開始 r搶紅包 p全部結束 ", foreground="red").grid(row=6, column=0, columnspan=4, pady=[0,5])
+        tk.Label(self.Ro_AutoFinishing_GUI, text="hint: s釣魚開始 r or c搶紅包 p全部結束 ", foreground="red").grid(row=6, column=0, columnspan=4, pady=[0,5])
 
         # eight row
         tk.Label(self.Ro_AutoFinishing_GUI, text="目前狀態：").grid(row=7, column=0, pady=[0,0])
@@ -86,6 +87,9 @@ class Ro_AutoFinishing:
 
         self.get_red_envelopeing_label = tk.Label(self.Ro_AutoFinishing_GUI, text="紅包X", foreground="red")
         self.get_red_envelopeing_label.grid(row=7, column=2, pady=[0,0])
+
+        self.chat_get_red_envelopeing_label = tk.Label(self.Ro_AutoFinishing_GUI, text="聊紅包X", foreground="red")
+        self.chat_get_red_envelopeing_label.grid(row=7, column=3, pady=[0,0])
     
     def init_listner(self) -> None:
         self.Ro_AutoFinishing_GUI.bind('<KeyPress>', self._on_Key_Press)
@@ -124,6 +128,10 @@ class Ro_AutoFinishing:
         if self.hwnd == None:
             messagebox.showinfo("提示", "請先選取遊戲視窗。")
             return
+        
+        if self.chat_get_red_envelopeing:
+            messagebox.showinfo("提示", "請先關閉聊天搶紅包。")
+            return
 
         width = self.hwnd_position["r"] - self.hwnd_position["x"]
         height = self.hwnd_position["b"] - self.hwnd_position["y"]
@@ -138,21 +146,40 @@ class Ro_AutoFinishing:
         self.get_red_envelopeing_label.config(text="紅包V")
         return
 
+    def start_chat_get_red_envelope(self):
+        if self.hwnd == None:
+            messagebox.showinfo("提示", "請先選取遊戲視窗。")
+            return
+
+        if self.get_red_envelopeing:
+            messagebox.showinfo("提示", "請先關閉一般搶紅包。")
+            return
+
+        self.chat_get_red_envelopeing = True
+        self.chat_get_red_envelopeing_label.config(foreground="green")
+        self.chat_get_red_envelopeing_label.config(text="聊紅包V")
+
     def stop_click(self, event):
         self.fishing = False
         self.get_red_envelopeing = False
+        self.chat_get_red_envelopeing = False
         self.get_red_envelopeing_label.config(foreground="red")
         self.get_red_envelopeing_label.config(text="紅包X")
         self.fishing_label.config(foreground="red")
         self.fishing_label.config(text="釣魚X")
+        self.chat_get_red_envelopeing_label.config(foreground="red")
+        self.chat_get_red_envelopeing_label.config(text="聊紅包X")
     
     def stop(self):
         self.fishing = False
         self.get_red_envelopeing = False
+        self.chat_get_red_envelopeing = False
         self.get_red_envelopeing_label.config(foreground="red")
         self.get_red_envelopeing_label.config(text="紅包X")
         self.fishing_label.config(foreground="red")
         self.fishing_label.config(text="釣魚X")
+        self.chat_get_red_envelopeing_label.config(foreground="red")
+        self.chat_get_red_envelopeing_label.config(text="聊紅包X")
 
     def start_main_job(self):
         def prevent_save_power():
@@ -174,6 +201,69 @@ class Ro_AutoFinishing:
             if start_time == 0:
                 start_time = time()
             screen_shot = self._get_screen_shot()
+
+            if self.chat_get_red_envelopeing:
+                now_time = time()
+                if (now_time - start_time) >= 30 and self.prevent_save_power_value.get() == 1:
+                    # 防止進入省電模式
+                    prevent_save_power()
+                    start_time = 0
+                
+                
+                h, w, _ = np.array(screen_shot).shape
+                check_padding = h / 13
+                chat_red_position = (int)(w * (1.17 / 4))
+
+                screen_shot_chat_room = screen_shot.crop((0, 0, (w * 1/3), h))
+                screen_shot_chat_room.save("1234.png")
+                screen_shot_chat_room = np.array(screen_shot_chat_room)
+                h_room, w_room, _ = screen_shot_chat_room.shape
+
+                for idx in range(0, (int)(h_room // check_padding)):
+                    check_interval_center = h_room - 1 - (int)(idx * check_padding)
+                    aver_dot = np.average(screen_shot_chat_room[check_interval_center , chat_red_position-5:chat_red_position+5], axis=0)
+                    move_x = chat_red_position + self.hwnd_position["x"]
+                    move_y = check_interval_center + self.hwnd_position["y"]
+                    if aver_dot[0] >= 240 and (aver_dot[1] >= 180 and aver_dot[1] <= 200) and (aver_dot[2] >= 75 and aver_dot[2] <= 105):
+                        pyautogui.mouseDown(move_x, move_y)
+                        sleep(0.03432 + (np.random.randn() / 100)) 
+                        pyautogui.mouseUp(move_x, move_y)
+                    
+            if self.get_red_envelopeing:
+                now_time = time()
+
+                if (now_time - start_time) >= 30 and self.prevent_save_power_value.get() == 1:
+                    # 防止進入省電模式
+                    prevent_save_power()
+                    start_time = 0
+
+                get_red = False
+                screen_shot_red = screen_shot.crop((self.red_envelope_mouse_position["x"], self.red_envelope_mouse_position["y"], self.red_envelope_mouse_position["r"], self.red_envelope_mouse_position["b"]))
+                screen_shot_red = np.array(screen_shot_red)
+                h, w, _ = np.array(screen_shot_red).shape
+                aver_dot = np.average(screen_shot_red[h//2+15, w//2-5:w//2+5], axis=0)
+                
+                move_x = w//2 + self.hwnd_position["x"] + self.red_envelope_mouse_position["x"]
+                move_y = h//2+15 + self.hwnd_position["y"] + self.red_envelope_mouse_position["y"]
+
+                # 紅 紅包 230 100 93
+                if aver_dot[0] >= 230 and (aver_dot[1] >= 100 and aver_dot[1] <= 120) and (aver_dot[2] >= 80 and aver_dot[2] <= 110):
+                    get_red = True
+                    pyautogui.click(move_x, move_y, clicks=3)
+
+                # 黃 紅包 234 156 94
+                if aver_dot[0] >= 230 and (aver_dot[1] >= 140 and aver_dot[1] <= 170) and (aver_dot[2] >= 80 and aver_dot[2] <= 110):
+                    get_red = True
+                    pyautogui.click(move_x, move_y, clicks=3)
+
+                if get_red:
+                    get_red = False
+                    sleep(1.0)
+                    h, w, _ = np.array(screen_shot).shape
+                    dwidth = (int)(w / 10)
+                    # 向右移動
+                    pyautogui.click(move_x + dwidth, move_y, clicks=3)
+
             if self.fishing:
                 get_fish = False
                 # 242 89 90  239 88 88
@@ -201,41 +291,6 @@ class Ro_AutoFinishing:
                     pyautogui.mouseDown(self.global_mouse_position["x"], self.global_mouse_position["y"])
                     sleep(0.03432 + (np.random.randn() / 100)) 
                     pyautogui.mouseUp(self.global_mouse_position["x"], self.global_mouse_position["y"])
-
-            if self.get_red_envelopeing:
-                now_time = time()
-
-                if (now_time - start_time) >= 30 and self.prevent_save_power_value.get() == 1:
-                    # 防止進入省電模式
-                    prevent_save_power()
-                    start_time = 0
-
-                get_red = False
-                screen_shot_red = screen_shot.crop((self.red_envelope_mouse_position["x"], self.red_envelope_mouse_position["y"], self.red_envelope_mouse_position["r"], self.red_envelope_mouse_position["b"]))
-                screen_shot_red = np.array(screen_shot_red)
-                h, w, _ = np.array(screen_shot_red).shape
-                aver_dot = np.average(screen_shot_red[h//2+15, w//2-5:w//2+5], axis=0)
-                
-                move_x = w//2 + self.hwnd_position["x"] + self.red_envelope_mouse_position["x"]
-                move_y = h//2+15 + self.hwnd_position["y"] + self.red_envelope_mouse_position["y"]
-
-                # 紅 紅包 230 100 93
-                if aver_dot[0] >= 230 and (aver_dot[1] >= 100 and aver_dot[1] <= 120) and (aver_dot[2] >= 80 and aver_dot[2] <= 110):
-                    get_red = True
-                    pyautogui.click(move_x, move_y, clicks=10)
-
-                # 黃 紅包 234 156 94
-                if aver_dot[0] >= 230 and (aver_dot[1] >= 140 and aver_dot[1] <= 170) and (aver_dot[2] >= 80 and aver_dot[2] <= 110):
-                    get_red = True
-                    pyautogui.click(move_x, move_y, clicks=10)
-
-                if get_red:
-                    get_red = False
-                    sleep(2.0)
-                    h, w, _ = np.array(screen_shot).shape
-                    dwidth = (int)(w / 10)
-                    # 向右移動
-                    pyautogui.click(move_x + dwidth, move_y, clicks=5)
 
             self.Ro_AutoFinishing_GUI.update_idletasks()
             self.Ro_AutoFinishing_GUI.update()
@@ -283,6 +338,8 @@ class Ro_AutoFinishing:
             self._get_cursor_position()
         elif event.char == 'r':
             self.start_get_red_envelope()
+        elif event.char == 'c':
+            self.start_chat_get_red_envelope()
 
     def _windows_selected(self, event) -> None:
         

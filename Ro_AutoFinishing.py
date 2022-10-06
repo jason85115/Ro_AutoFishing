@@ -228,6 +228,9 @@ class Ro_AutoFinishing:
                         pyautogui.mouseDown(move_x, move_y)
                         sleep(0.03432 + (np.random.randn() / 100)) 
                         pyautogui.mouseUp(move_x, move_y)
+                        sleep(0.5)
+                        prevent_save_power()
+                        
                     
             if self.get_red_envelopeing:
                 now_time = time()

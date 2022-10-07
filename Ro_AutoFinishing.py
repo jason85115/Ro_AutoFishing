@@ -191,9 +191,11 @@ class Ro_AutoFinishing:
 
             refresh_x = self.hwnd_position["x"] + refresh_x
             refresh_y = self.hwnd_position["y"] + refresh_y
-            pyautogui.mouseDown(refresh_x, refresh_y)
-            sleep(0.03432 + (np.random.randn() / 100)) 
-            pyautogui.mouseUp(refresh_x, refresh_y)
+            pyautogui.click(refresh_x, refresh_y, clicks=1)
+
+            # pyautogui.mouseDown(refresh_x, refresh_y)
+            # sleep(0.03432 + (np.random.randn() / 100)) 
+            # pyautogui.mouseUp(refresh_x, refresh_y)
 
             
         start_time = 0
@@ -209,7 +211,6 @@ class Ro_AutoFinishing:
                     prevent_save_power()
                     start_time = 0
                 
-                
                 h, w, _ = np.array(screen_shot).shape
                 check_padding = h / 13
                 chat_red_position = (int)(w * (1.17 / 4))
@@ -218,16 +219,14 @@ class Ro_AutoFinishing:
                 screen_shot_chat_room = np.array(screen_shot_chat_room)
                 h_room, w_room, _ = screen_shot_chat_room.shape
 
-                for idx in range(0, (int)(h_room // check_padding)):
+                for idx in range(1, (int)(h_room // check_padding)):
                     check_interval_center = h_room - 1 - (int)(idx * check_padding)
                     aver_dot = np.average(screen_shot_chat_room[check_interval_center , chat_red_position-5:chat_red_position+5], axis=0)
                     move_x = chat_red_position + self.hwnd_position["x"]
                     move_y = check_interval_center + self.hwnd_position["y"]
                     if aver_dot[0] >= 240 and (aver_dot[1] >= 180 and aver_dot[1] <= 200) and (aver_dot[2] >= 75 and aver_dot[2] <= 105):
-                        pyautogui.mouseDown(move_x, move_y)
-                        sleep(0.03432 + (np.random.randn() / 100)) 
-                        pyautogui.mouseUp(move_x, move_y)
-                        sleep(0.5)
+                        pyautogui.click(move_x, move_y, clicks=1)
+                        sleep(0.35)
                         prevent_save_power()
                         
                     

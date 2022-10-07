@@ -250,16 +250,16 @@ class Ro_AutoFinishing:
                 # 紅 紅包 230 100 93
                 if aver_dot[0] >= 230 and (aver_dot[1] >= 100 and aver_dot[1] <= 120) and (aver_dot[2] >= 80 and aver_dot[2] <= 110):
                     get_red = True
-                    pyautogui.click(move_x, move_y, clicks=3)
+                    pyautogui.click(move_x, move_y, clicks=1)
 
                 # 黃 紅包 234 156 94
                 if aver_dot[0] >= 230 and (aver_dot[1] >= 140 and aver_dot[1] <= 170) and (aver_dot[2] >= 80 and aver_dot[2] <= 110):
                     get_red = True
-                    pyautogui.click(move_x, move_y, clicks=3)
+                    pyautogui.click(move_x, move_y, clicks=1)
 
                 if get_red:
                     get_red = False
-                    sleep(1.0)
+                    sleep(0.5)
                     h, w, _ = np.array(screen_shot).shape
                     dwidth = (int)(w / 10)
                     # 向右移動
